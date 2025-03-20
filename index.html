@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="ARFlow: Human Action-Reaction Flow Matching with Physical Guidance">
+  <meta name="keywords" content="Diffusion Policy; Manipulation; Generalization">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- <title>Nerfies: Deformable Neural Radiance Fields</title> -->
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/file_1.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title"> 
+            <span style="background: -webkit-linear-gradient(left, rgb(50, 134, 199) , rgb(243, 50, 50)); -webkit-background-clip: text; color: transparent;">
+              ARFlow</span>
+              <span>: Human Action-Reaction</span>
+            <br>
+            Flow Matching with Physical Guidance
+          </h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!--/ Abstract. -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Human action-reaction synthesis, a fundamental challenge in modeling causal human interactions, plays a critical 
+            role in applications ranging from virtual reality to social robotics. While diffusion-based models have demonstrated 
+            promising performance, they exhibit two key limitations for interaction synthesis: reliance on complex noise-to-reaction 
+            generators with intricate conditional mechanisms, and frequent physical violations in generated motions. To address 
+            these issues, we propose Action-Reaction Flow Matching (ARFlow), a novel framework that establishes direct 
+            action-to-reaction mappings, eliminating the need for complex conditional mechanisms. Our approach introduces two key 
+            innovations: an x1-prediction method that directly outputs human motions instead of velocity fields, enabling explicit 
+            constraint enforcement; and a training-free, gradient-based physical guidance mechanism that effectively prevents body 
+            penetration artifacts during sampling. Extensive experiments on NTU120 and Chi3D datasets demonstrate that ARFlow not only 
+            outperforms existing methods in terms of Fréchet Inception Distance and motion diversity but also significantly reduces body 
+            collisions, as measured by our new Intersection Volume and Intersection Frequency metrics. 
+          </p>
+        </div>
+      </div>
+    </div>
+</section> 
+
+<!-- Paper video. -->
+<!-- <section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src="https://www.bilibili.com/video/BV12B1yYREqd/?spm_id_from=333.1007.tianma.1-1-1.click"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section> -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 border-b-1px mb-4">Overview</h2>
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths has-text-centered">
+          <figure class="image">
+            <img src="./static/images/L2L.png"  class="image-size">
+          </figure>
+        </div>
+      </div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="content has-text-justified">
+          <p>
+            Our proposed Human Action-Reaction Flow (ARFlow). We directly establish a mapping between the action 
+            and reaction distribution and our sampling process is further guided by our physical constraint guidance. The change of 
+            colors represents the variation of the h-frame reaction with sampling timestep t. 
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 border-b-1px mb-4">Pipeline</h2>
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths has-text-centered">
+          <figure class="image">
+            <img src="./media/framework.png"  class="image-size">
+          </figure>
+        </div>
+      </div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="content has-text-justified">
+          <p>
+            Pipeline of ARFlow. (a) For a sampled timestep t, we linearly interpolate a coupled action-reaction pair to produce the intermediate state xt, which is then turns into a d-dimensional latent feature through a linear layer. We use Transformer Decoder Units to directly predict clean reaction motions. (b) After training the networks in (a), our ARFlow uses them for x1-prediction based sampling. The sampling process is further guided by the gradient of L to generate physically plausible reactions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container is-max-desktop">
+  <h2 class="title is-3 border-b-1px mb-4">Results</h2>
+  <br>
+  <div class="columns is-centered has-text-centered">
+    <div class="column is-four-fifths">
+      <div class="content has-text-justified">
+        <p>
+          As shown, our method not only produces more physically plausible reactions but also more responsive reactions due to stronger modeling ability for causal relationship between actions and reactions. <span style="color: blue;">Blue</span> for actors and <span style="color: rgb(20, 218, 20);">Green</span> for reactors.
+        </p>
+      </div>
+    </div>
+  </div>  
+  <section class="hero is-light is-small">
+    <div class="hero-body">  
+      <div class="container">
+        <div id="results-carousel" class="carousel results-carousel">
+          <div class="item item-fullbody">
+            <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/real2.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="item item-steve">
+            <video poster="" id="steve" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/kick.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="item item-chair-tp">
+            <video poster="" id="chair-tp" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/hug.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="item item-shiba">
+            <video poster="" id="shiba" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/gap terrain.mp4"
+                      type="video/mp4">
+            </video>
+            <!-- <div class="video-speed">1x</div> -->
+          </div>
+          <div class="item item-fullbody">
+            <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/hurdle_terrain.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+
+          <div class="item item-fullbody">
+            <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/parkour_terrain.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+
+          <div class="item item-fullbody">
+            <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/sml_parkour_terrain.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="item item-fullbody">
+            <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+              <source src="./media/failure case1.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <br>
+</div>
+
+
+<div class="container is-max-desktop">
+  <h2 class="title is-3 border-b-1px mb-4" style="text-align: justify">Comparison with Baselines</h2>
+  <br>
+  <div class="columns is-centered has-text-centered">
+      <div class="content has-text-justified" style="text-align: justify">
+        <p>
+          We provide a qualitative comparison of reaction sequences generated by MDM, ReGenNet and ARFlow with physical constraint guidance.
+          Both MDM and ReGenNet produce varying degrees of penetration between the actor and the reactor. In contrast, ARFlow produces more responsive and physically plausible reactions.
+          Here are some comparative videos: 
+        </p>
+    </div>
+  </div>
+  <br>
+  <div class="columns is-centered">
+    <h3 class="title is-4" style="margin-bottom: 0rem;">Whisper</h3>
+  </div>
+  <section class="hero is-light is-small">
+    <div class="hero-body">    
+      <div class="columns is-centered">
+        <div class="columns is-multiline is-variable is-2">
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/dp_1.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">MDM</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/dp3_1.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">ReGenNet</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/ours_1.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">✅ARFlow</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <br>
+  <div class="columns is-centered">
+    <h3 class="title is-4" style="margin-bottom: 0rem;">Kick</h3>
+  </div>
+  <section class="hero is-light is-small">
+    <div class="hero-body">    
+      <div class="columns is-centered">
+        <div class="columns is-multiline is-variable is-2">
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/dp_0.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">MDM</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/dp3_0.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">ReGenNet</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/comparison/sim/ours_0.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">✅ARFlow</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <br>
+  <div class="columns is-centered">
+    <h3 class="title is-4" style="margin-bottom: 0rem;">Kick</h3>
+  </div>
+  <section class="hero is-light is-small">
+    <div class="hero-body">    
+      <div class="columns is-centered">
+        <div class="columns is-multiline is-variable is-2">
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/videos/supp_/opendrawer/oven_dp.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">MDM</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/videos/supp_/opendrawer/oven_dp3.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">ReGenNet</p>
+          </div>
+          <div class="column is-4">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/videos/supp_/opendrawer/oven_ours.mp4" type="video/mp4">
+            </video>
+            <p class="has-text-centered">✅ARFlow</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- <section class="section">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src="https://www.youtube.com/embed/4BiFEKbvJco?si=3JcDwPCNzDo7398g" 
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </section> -->
+  <br>
+
+
+<!-- 
+<div class="container is-max-desktop">
+  <section class="hero is-light is-small">
+    <div class="hero-body">    
+      <div class="columns is-centered">
+        <div class="columns is-multiline is-variable is-2">
+          <div class="column is-12">
+            <video style="width:100%; height:auto;" controls muted loading="lazy" autoplay loop playsinline>
+              <source src="./static/videos/Sim/simplay.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <br>
+</div> -->
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+      <h2 class="title">Citation</h2>
+      <div style="position: relative;">
+          <pre><code id="bibtex-code">@article{jiang2025arflow,
+            title={ARFlow: Human Action-Reaction Flow Matching with Physical Guidance},
+            author={Jiang, Wentao and Wang, Jingya and Lu, Haotao and Ji, Kaiyang and Jia, Baoxiong and Huang, Siyuan and Shi, Ye},
+            journal={arXiv preprint arXiv:2412.03142},
+            year={2025}
+          }
+        </code></pre>
+          <button onclick="copyToClipboard()" style="position: absolute; top: 5px; right: 5px; background: none; border: none; cursor: pointer;">
+              <!-- 粘贴图标，可以使用Font Awesome 图标库 -->
+              <i class="fa fa-paste" aria-hidden="true"></i>
+          </button>
+      </div>
+  </div>
+</section>
+
+
+<footer class="footer">
+    <div class="columns is-centered">
+        <div class="content">
+          <p>
+            This website is borrowed from <a href="https://github.com/afforddp/afforddp.github.io">AffordDP</a>.
+          </p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
