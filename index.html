@@ -76,10 +76,11 @@
             promising performance, they exhibit two key limitations for interaction synthesis: reliance on complex noise-to-reaction 
             generators with intricate conditional mechanisms, and frequent physical violations in generated motions. To address 
             these issues, we propose Action-Reaction Flow Matching (ARFlow), a novel framework that establishes direct 
-            action-to-reaction mappings, eliminating the need for complex conditional mechanisms. Our approach introduces two key 
-            innovations: an x1-prediction method that directly outputs human motions instead of velocity fields, enabling explicit 
-            constraint enforcement; and a training-free, gradient-based physical guidance mechanism that effectively prevents body 
-            penetration artifacts during sampling. Extensive experiments on NTU120 and Chi3D datasets demonstrate that ARFlow not only 
+            action-to-reaction mappings, eliminating the need for complex conditional mechanisms. Our approach introduces 
+            a physical guidance mechanism specifically designed for Flow Matching (FM) that effectively prevents body penetration 
+            artifacts during sampling. Moreover, we discover the bias of traditional flow matching sampling algorithm and employ a 
+            reprojection method to revise the sampling direction of FM. To further enhance the reaction diversity, we incorporate 
+            randomness into the sampling process. Extensive experiments on NTU120 and Chi3D datasets demonstrate that ARFlow not only 
             outperforms existing methods in terms of Fréchet Inception Distance and motion diversity but also significantly reduces body 
             collisions, as measured by our new Intersection Volume and Intersection Frequency metrics. 
           </p>
@@ -381,7 +382,7 @@
     <div class="columns is-centered">
         <div class="content">
           <p>
-            This website is borrowed from <a href="https://github.com/afforddp/afforddp.github.io">AffordDP</a>.
+            This website is borrowed from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
           </p>
         </div>
     </div>
